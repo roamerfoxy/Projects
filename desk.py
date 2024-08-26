@@ -4,6 +4,7 @@ import functools
 import asyncio
 import os
 import struct
+import json
 
 # import threading
 
@@ -49,23 +50,41 @@ class Desk:
 
     def __init__(self):
 
-        self.config = {
-            "mac_address": "FD:46:77:A9:30:CA",
-            "adapter_name": "hci0",
-            "position_3": BASE_HEIGHT + 530,
-            "position_2": BASE_HEIGHT + 430,
-            "position_1": BASE_HEIGHT + 80,
-            "height_tolerance": 1,
-            "scan_timeout": 5,
-            "connection_timeout": 5,
-            "movement_timeout": 5,
-        }
-
+        self.config = self.load_config()
         self.device = None
         self.client = None
         self.subscribed = False
         self.desk_height = 0
         self.desk_speed = 0
+
+    def load_config(self, config_file="desk_config.json"):
+        """load config file"""
+        try:
+            with open(config_file, "r", encoding="utf-8") as f:
+                config = json.load(f)
+            return {
+                "mac_address": config.get("mac_address", "FD:46:77:A9:30:CA"),
+                "adapter_name": config.get("adapter_name", "hci0"),
+                "position_3": config.get("position_3", BASE_HEIGHT + 530),
+                "position_2": config.get("position_2", BASE_HEIGHT + 430),
+                "position_1": config.get("position_1", BASE_HEIGHT + 80),
+                "height_tolerance": config.get("height_tolerance", 1),
+                "scan_timeout": config.get("scan_timeout", 5),
+                "connection_timeout": config.get("connection_timeout", 5),
+                "movement_timeout": config.get("movement_timeout", 5),
+            }
+        except FileNotFoundError:
+            return {
+                "mac_address": "FD:46:77:A9:30:CA",
+                "adapter_name": "hci0",
+                "position_3": BASE_HEIGHT + 530,
+                "position_2": BASE_HEIGHT + 430,
+                "position_1": BASE_HEIGHT + 80,
+                "height_tolerance": 1,
+                "scan_timeout": 5,
+                "connection_timeout": 5,
+                "movement_timeout": 5,
+            }
 
     async def scan(self, mac_address):
         """find the device"""
